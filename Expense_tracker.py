@@ -6,9 +6,9 @@ import json
 ## get balance
 ## use while loop for asking user for choice
 
-filepath = 'budget_data_test.json'  # Define the path to your JSON file
-
+filepath = 'budget_data_test.json'
 expenses_list = []
+
 # initial_budget = 1000
 def add_expenses():
     description = input("write a info about purchese ")
@@ -22,7 +22,7 @@ def add_expenses():
     print("Expense added!")
     return  expenses_list
 
-def total_expenses(expenses_list):
+def total_expenses():
     total = 0
     for item in expenses_list:
         total = item["amount"] + total
@@ -34,7 +34,7 @@ def get_balance(total_amount, budget):
     print(f"Remaining balance: ${balance}")
     return balance
 
-def display_expenses_detail(expenses_list):
+def display_expenses_detail():
     if not expenses_list:
         print("No expenses recorded yet.")
     else:
@@ -42,6 +42,33 @@ def display_expenses_detail(expenses_list):
         for expense in expenses_list:
             print(f"{idx}. {expense['description']} - ${expense['amount']}")
             idx += 1  # Increment the index after each iteration
+
+# Remove an expense
+def remove_expense():
+    display_expenses_detail()
+    try:
+        idx = int(input("Enter the number of the expense to remove: ")) - 1
+        if idx < 0 or idx >= len(expenses_list):
+            print("Invalid expense number.")
+            return
+        expenses_list.pop(idx)
+        print("Expense removed successfully!")
+    except ValueError:
+        print("Invalid input. Please try again.")
+
+def edit_expense():
+    display_expenses_detail()
+    try:
+        idx = int(input("Enter the number of the expense to edit: ")) - 1  # Get index to edit (zero-based)
+        if idx < 0 or idx >= len(expenses_list):  # Validate index range
+            print("Invalid expense number.")
+            return
+        description = input("Enter the new description: ")
+        amount = float(input("Enter the new amount: "))
+        expenses_list[idx] = {"description": description, "amount": amount}
+        print("Expense updated successfully!")
+    except ValueError:
+        print("Invalid input. Please try again.")
 
 def save_budget_data(filepath, initial_budget, expenses):
     data = {
@@ -63,52 +90,62 @@ def load_budget_data_dict(file_path):
     except (FileNotFoundError, json.JSONDecodeError):
         return {"initial_budget": 0, "expenses": []}
 
+
 def main():
+    budget_data = load_budget_data_dict(filepath)
+    initial_budget = budget_data["initial_budget"]
+    global expenses_list
+    expenses_list = budget_data["expenses"]
+
+    if initial_budget == 0:
+        while True:
+            try:
+                initial_budget = float(input("Enter the budget: "))
+                break
+            except ValueError:
+                print("Invalid input. Please enter a numeric value for the budget.")
+
     while True:
-        print("\nWhat would you like to do? ")
+        print("\nWhat would you like to do?")
         print("1. Add an expense")
-        print("2. Show budget details")
+        print("2. Show all expenses")
         print("3. Show total expenses")
-        print("4. show the balance for the budget")
-        print("5. load and show the expense on json file")
+        print("4. Show remaining budget")
+        print("5. Edit an expense")
+        print("6. Remove an expense")
+        print("7. Save and Exit")
 
-        budget_data = load_budget_data_dict(filepath)
-        budget = budget_data["initial_budget"]
-        if budget == 0:
-            budget = int(input("write budget for expenses "))
-        initial_budget = budget
+        choice = input("Enter your choice: ")
 
-        expenses = budget_data["expenses"]
-
-        choice = input("enter option from the screen ")
         if choice == "1":
-            exp =add_expenses()
-            save = input("do you save in json file y/n")
-            if save == "y":
-                save_budget_data(filepath, initial_budget, exp)
+            add_expenses()
+            save_budget_data(filepath, initial_budget, expenses_list)
 
         elif choice == "2":
-            display_expenses_detail(expenses_list)
+            display_expenses_detail()
+
         elif choice == "3":
             total_expenses()
 
-        elif choice =="4":
-            get_balance(initial_budget)
-        elif choice =="5":
+        elif choice == "4":
+            total = total_expenses()
+            get_balance(total, initial_budget)
 
-            print("display expenses details")
-            display_expenses_detail(expenses)
-            print("Get total expensest")
-            t= total_expenses(expenses)
-            print("get balance")
-            b =get_balance(t, initial_budget)
-            print("remaing budget", b)
+        elif choice == "5":
+            edit_expense()
+            save_budget_data(filepath, initial_budget, expenses_list)
 
+        elif choice == "6":
+            remove_expense()
+            save_budget_data(filepath, initial_budget, expenses_list)
 
-
-        elif choice =="6":
-            print("exit")
+        elif choice == "7":
+            save_budget_data(filepath, initial_budget, expenses_list)
+            print("Exiting... Goodbye!")
             break
+
+        else:
+            print("Invalid choice. Please select a valid option.")
 
 if __name__ == "__main__":
     main()
